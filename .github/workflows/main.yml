@@ -1,0 +1,67 @@
+#
+name: Docker Up
+
+# This workflow runs when any of the following occur:
+# - A push is made to a branch called `master`
+on:
+  push:
+    branches:
+      - master
+
+env:
+  SERVER_IMAGE_NAME: leaky-server
+
+#
+jobs:
+  # This pushes the image to GitHub Packages.
+  push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      id-token: write
+      contents: read
+      #
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build server
+        run: docker build . --file Dockerfile --tag $SERVER_IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        #
+      - name: Push server
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$SERVER_IMAGE_NAME
+
+          # This changes all uppercase characters to lowercase.
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          # This strips the git ref prefix from the version.
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          # This strips the "v" prefix from the tag name.
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          # This uses the Docker `latest` tag convention.
+          [ "$VERSION" == "master" ] && VERSION=latest
+
+          SHA=$(echo "${{ github.sha }}")
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          echo SHA=$SHA
+          docker tag $SERVER_IMAGE_NAME $IMAGE_ID:$SHA          
+          docker push $IMAGE_ID:$SHA
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          # enable-AzPSSession: true
+  
+      - name: Build and deploy Container App
+        uses: azure/container-apps-deploy-action@v2
+        with:          
+          containerAppName: leakycerebrum-cus-aca
+          resourceGroup: leakycerebrum-cus
+          imageToDeploy: ghcr.io/${{ github.repository_owner }}/${{ env.SERVER_IMAGE_NAME }}:${{ github.sha }}

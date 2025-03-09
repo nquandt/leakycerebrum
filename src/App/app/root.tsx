@@ -5,10 +5,14 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useNavigate,
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import '@unocss/reset/tailwind-compat.css';
+import 'virtual:uno.css';
 import "./app.css";
+import { useLayoutEffect } from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -23,16 +27,41 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+let isHooked = false;
+
 export function Layout({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  
+  /**
+   * Catch all a-href tags clicks
+   */
+  useLayoutEffect(() => {
+    // need to figure out how to make singleton
+    if (!isHooked) {
+      document.addEventListener(`click`, (e: any) => {
+        const origin = e.target.closest(`a`);
+
+        if (origin) {
+          e.preventDefault();
+          e.stopPropagation();
+          navigate(new URL(origin.href).pathname);
+        }
+      });
+      isHooked = true;
+    }
+  }, []);
+
+
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={true}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script type="module" src="/theme.js"></script>
       </head>
-      <body>
+      <body className="">
         {children}
         <ScrollRestoration />
         <Scripts />
