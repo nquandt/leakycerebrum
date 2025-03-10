@@ -16,7 +16,7 @@ export const Header = () => {
   return (
     <>
       <div
-        className="py-3 flex w-full justify-between fixed bg-gradient-to-b dark:from-zinc-900 light:from-light !from-50% z-10"
+        className="py-3 flex w-full justify-between fixed bg-gradient-to-b dark:from-zinc-950 light:from-light !from-50% z-10"
         style={{ height: "80px" }}
       >
         <Container>

@@ -8,10 +8,10 @@ export const Posts = () => {
     return <></>
   }
   return (
-    <>
+    <div className="flex flex-col gap-8 w-full">
       {posts.map((post) => (
         <PostCard key={post.title} post={post} />
       ))}
-    </>
+    </div>
   );
 };

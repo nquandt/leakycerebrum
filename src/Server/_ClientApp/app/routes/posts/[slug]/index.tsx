@@ -14,6 +14,7 @@ import type { Post } from "~/utils/posts";
 import type { Route } from "./+types";
 import { MarkdownView } from "~/components/markdown-view";
 import { Container } from "~/components/Container";
+import { HR } from "~/components/HR";
 
 const normalizePath = (pth: string | undefined) => {
   const slugs = pth?.split(/[/\\]/) || [];
@@ -51,7 +52,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
             day: "numeric",
           })}
         </time>
-        <hr />
+        <HR/>
         <MarkdownView document={post.content} />
         {/* <Prose>
           <div

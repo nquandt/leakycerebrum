@@ -35,6 +35,15 @@ export default defineConfig({
       },
     }),
   ],
+  extendTheme: (theme) => {
+    return {
+      ...theme,
+      breakpoints: {
+        ...theme.breakpoints,
+        lg: '1004px',
+      },
+    }
+  },
   shortcuts: {
     "list-list": "list-disc list-inside -indent-12 pl-12",
   },
