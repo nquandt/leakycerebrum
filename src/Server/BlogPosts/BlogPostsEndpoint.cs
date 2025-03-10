@@ -23,7 +23,11 @@ public class BlogPostsEndpoint
     public BlogPostsEndpoint([FromKeyedServices("server")]DefaultFileSystem defaultFileSystem)
     {
         _defaultFileSystem = defaultFileSystem;
-        _jsonSerializerOptions = JsonSerializerOptions.Web;
+        _jsonSerializerOptions = new JsonSerializerOptions() {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        };
     }
 
     public async Task<IResult> GetAllPostsAsync(HttpContext context, CancellationToken cancellationToken)
