@@ -13,6 +13,8 @@ import "@unocss/reset/tailwind-compat.css";
 import "virtual:uno.css";
 import "./app.css";
 import { useLayoutEffect } from "react";
+import { Logo } from "./components/Logo";
+import { Container } from "./components/Container";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -74,7 +76,13 @@ export default function App() {
 }
 
 export function HydrateFallback() {
-  return <div>Loading</div>;
+  return (
+    <Container>
+      <div className="w-full flex justify-center pt-36">
+        <Logo className="w-full active-pulse" />
+      </div>
+    </Container>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

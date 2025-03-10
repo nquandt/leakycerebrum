@@ -1,11 +1,8 @@
 import type { Route } from "./+types";
-import { Welcome } from "../welcome/welcome";
 import { Logo } from "~/components/Logo";
-import { Prose } from "~/components/Prose";
 import { Container } from "~/components/Container";
 import { MarkdownView } from "~/components/markdown-view";
-import { getPosts } from "~/utils/posts";
-import { PostCard } from "~/components/PostCard";
+import { Posts } from "~/components/Posts";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -14,12 +11,7 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  return await getPosts();
-}
-
-export default function Home({ loaderData }: Route.ComponentProps) {
-  const { posts } = loaderData;
+export default function Home() {
   return (
     <>
       <Container>
@@ -58,9 +50,7 @@ Whether you're an engineer refining your craft, an architect shaping technical s
       <Container>
         <div className="flex flex-col gap-8 w-full">
           <h1 className="text-4xl underline font-italic dark:text-white light:text-black">Some Leaks</h1>
-          {posts.map((post) => (
-            <PostCard key={post.title} post={post} />
-          ))}
+          <Posts />
         </div>
       </Container>
     </>

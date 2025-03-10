@@ -17,6 +17,11 @@ body {
   animation-play-state: running;
 }
 
+.active-pulse {
+  animation-fill-mode: forwards;
+  animation-play-state: running;
+}
+
 @keyframes pulse {
   from {
     transform: scale(1);

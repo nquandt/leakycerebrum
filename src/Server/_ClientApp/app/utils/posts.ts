@@ -11,7 +11,7 @@ export interface Post {
 }
 
 
-export async function getPosts() {
-  const posts: Post[] = await fetch(`/api/posts`).then(x => x.json());
-  return { posts };
-}
+// export async function getPosts() {
+//   const posts: Post[] = await fetch(`/api/posts`).then(x => x.json());
+//   return { posts };
+// }

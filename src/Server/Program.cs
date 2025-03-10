@@ -91,7 +91,7 @@ BlogPostsEndpoint.MapEndpoint(app);
 
 if (app.Environment.IsDevelopment())
 {
-    // app.MapReverseProxy();
+    app.MapReverseProxy();
 }
 
 app.Run();
