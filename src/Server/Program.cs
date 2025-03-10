@@ -19,7 +19,7 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 static string? GetContentTypeFromExtension(string slug)
 {
@@ -61,8 +61,9 @@ if (app.Environment.IsProduction())
     //     EnableDirectoryBrowsing = false
     // });
 
-    app.MapGet("/{**slug}", async ([FromRoute] string slug, [FromKeyedServices("client")] DefaultFileSystem fs, CancellationToken cancellationToken) =>
+    app.MapGet("/{**slug}", async ([FromKeyedServices("client")] DefaultFileSystem fs, CancellationToken cancellationToken, [FromRoute] string? slug = null) =>
     {
+        slug ??= "./index.html";
         if (await fs.FileExistsAsync(slug))
         {
             var file = await fs.OpenReadAsync(slug, cancellationToken);
@@ -90,7 +91,7 @@ BlogPostsEndpoint.MapEndpoint(app);
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapReverseProxy();
+    // app.MapReverseProxy();
 }
 
 app.Run();
