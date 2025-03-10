@@ -43,7 +43,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       {/* <Head>
         <title>{post.title}</title>
       </Head> */}
-      <article className="py-8 mx-auto">
+      <article className="mx-auto">
         <h1 className="text-5xl font-bold">{post.title}</h1>
         <time className="text-gray-500">
           {new Date(post.publishedAt).toLocaleDateString("en-us", {
