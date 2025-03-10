@@ -19,7 +19,7 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 static string? GetContentTypeFromExtension(string slug)
 {
