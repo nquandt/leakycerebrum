@@ -6,8 +6,8 @@ import { Posts } from "~/components/Posts";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "Leaky Cerebrum" },
+    { name: "description", content: "Welcome to my brain dump!" },
   ];
 }
 

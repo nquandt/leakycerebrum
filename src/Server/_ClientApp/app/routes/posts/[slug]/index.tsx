@@ -28,18 +28,12 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return { post };
 }
 
-// export async function loader({ params }: Route.LoaderArgs) {
-//   const fullSlug = normalizePath(params.slug);
-
-//   const post = await getPost(fullSlug);
-
-//   if (!post)
-//   {
-//     throw new Error("Not found");
-//   }
-
-//   return { post }
-// }
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Leak | Leaky Cerebrum" },
+    { name: "description", content: "Read a brain leak." },
+  ];
+}
 
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { post } = loaderData;
