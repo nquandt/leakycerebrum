@@ -2,10 +2,7 @@
 title: Change as a Catalyst for Motivation
 published_at: 2025-02-26
 snippet: Change is uncomfortable. It’s disruptive. And often... _it’s one of the greatest sources of motivation we have._
-tags:
-  - thoughts
-  - motivation
-  - leadership
+tags: thoughts, motivation, leadership
 ---
 
 ### **Change as a Catalyst for Motivation: Why I’m Starting This Blog**

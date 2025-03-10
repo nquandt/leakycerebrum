@@ -6,6 +6,9 @@ import { copyTextToClipboard } from "~/utils";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
+import remarkFm from "remark-frontmatter";
+import remarkGfm from "remark-gfm";
+
 type MarkdownViewProps = {
   document: string;
 };
@@ -15,7 +18,7 @@ export const MarkdownView = ({ document }: MarkdownViewProps) => {
       <Prose>
         <Markdown
           children={document}
-          //   remarkPlugins={[remarkGfm]}
+          remarkPlugins={[remarkFm, remarkGfm]}
           components={{
             code({ node, className, children, style, ...rest }) {
               const match = /language-(\w+)/.exec(className || "");

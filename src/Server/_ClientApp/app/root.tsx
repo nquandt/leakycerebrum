@@ -9,8 +9,8 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import '@unocss/reset/tailwind-compat.css';
-import 'virtual:uno.css';
+import "@unocss/reset/tailwind-compat.css";
+import "virtual:uno.css";
 import "./app.css";
 import { useLayoutEffect } from "react";
 
@@ -31,7 +31,7 @@ let isHooked = false;
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  
+
   /**
    * Catch all a-href tags clicks
    */
@@ -50,7 +50,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       isHooked = true;
     }
   }, []);
-
 
   return (
     <html lang="en" suppressHydrationWarning={true}>
@@ -72,6 +71,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return <Outlet />;
+}
+
+export function HydrateFallback() {
+  return <div>Loading</div>;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

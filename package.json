@@ -6,12 +6,15 @@
     "node": "20.18.3"
   },
   "workspaces": [
-    "./src/*/"    
+    "./src/Server/_ClientApp/"    
   ],
   "scripts": {
-    "dev:app": "cd ./src/App && npm run dev",
-    "dev:server": "cd ./src/Server && dotnet watch --no-hot-reload",
+    "dev:app": "cd ./src/Server/_ClientApp &&npm run dev",
+    "dev:server": "cd ./src/Server &&dotnet watch --no-hot-reload",
     "dev": "concurrently \"npm run dev:app\" \"npm run dev:server\"",
+    "production:app": "cd ./src/Server/_ClientApp &&npm run build",
+    "production:server": "dotnet publish ./src/Server/Server.csproj -o ./artifacts",
+    "production": "npm run production:app &&npm run production:server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {

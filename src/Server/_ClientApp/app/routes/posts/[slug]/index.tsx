@@ -1,4 +1,3 @@
-
 // export const handler: Handlers<Post> = {
 //   async GET(_req, ctx) {
 //     try {
@@ -10,9 +9,11 @@
 //   },
 // };
 
-import { getPost } from "~/utils/posts";
+// import { getPost } from "~/utils/posts";
+import type { Post } from "~/utils/posts";
 import type { Route } from "./+types";
 import { MarkdownView } from "~/components/markdown-view";
+import { Container } from "~/components/Container";
 
 const normalizePath = (pth: string | undefined) => {
   const slugs = pth?.split(/[/\\]/) || [];
@@ -20,29 +21,35 @@ const normalizePath = (pth: string | undefined) => {
   return "/" + slugs.filter(Boolean).join("/");
 };
 
-
-export async function loader({ params }: Route.LoaderArgs) {
-  const fullSlug = normalizePath(params.slug);
-
-  const post = await getPost(fullSlug);
-
-  if (!post)
-  {
-    throw new Error("Not found");
-  }
-
-  return { post }
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+  const post: Post & { content: string } = await fetch(
+    `/api/posts/${params.slug}`
+  ).then((x) => x.json());
+  return { post };
 }
+
+// export async function loader({ params }: Route.LoaderArgs) {
+//   const fullSlug = normalizePath(params.slug);
+
+//   const post = await getPost(fullSlug);
+
+//   if (!post)
+//   {
+//     throw new Error("Not found");
+//   }
+
+//   return { post }
+// }
 
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { post } = loaderData;
   return (
-    <>
+    <Container>
       {/* <Head>
         <title>{post.title}</title>
       </Head> */}
-      <main className="py-8 mx-auto">
-        <h1 className="text-5xl font-bold">{post.title}</h1>        
+      <article className="py-8 mx-auto">
+        <h1 className="text-5xl font-bold">{post.title}</h1>
         <time className="text-gray-500">
           {new Date(post.publishedAt).toLocaleDateString("en-us", {
             year: "numeric",
@@ -50,7 +57,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
             day: "numeric",
           })}
         </time>
-        <hr/>
+        <hr />
         <MarkdownView document={post.content} />
         {/* <Prose>
           <div
@@ -58,7 +65,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
             dangerouslySetInnerHTML={{ __html: render(post.content) }}
           />
         </Prose> */}
-      </main>
-    </>
+      </article>
+    </Container>
   );
 }

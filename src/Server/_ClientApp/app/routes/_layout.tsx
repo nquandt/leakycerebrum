@@ -7,12 +7,12 @@ export default function Layout() {
   return (
     <main
       id="app"
-      className="w-full h-full relative min-h-screen flex flex-col justify-between items-center"
+      className="w-full h-full relative min-h-screen flex flex-col justify-between items-center gap-32"
     >
-      <Header />
-      <Container>
+      <div className="w-full flex flex-col justify-start items-center gap-8">
+        <Header />
         <Outlet />
-      </Container>
+      </div>
       <Footer />
     </main>
   );
