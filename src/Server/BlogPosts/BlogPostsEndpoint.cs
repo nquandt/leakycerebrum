@@ -42,6 +42,8 @@ public class BlogPostsEndpoint
             posts.Add(dto);
         }
 
+        context.SetMaxAge1StaleInfinite();
+
         return Results.Json(posts, _jsonSerializerOptions);
     }
 
@@ -57,6 +59,8 @@ public class BlogPostsEndpoint
         }
 
         var dto = file.ToDto(true);
+
+        context.SetMaxAge1StaleInfinite();
 
         return Results.Json(dto, _jsonSerializerOptions);
     }

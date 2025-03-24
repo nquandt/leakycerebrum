@@ -14,7 +14,8 @@ builder.Services.AddKeyedSingleton("client", new DefaultFileSystem("./_ClientApp
 
 builder.Services.AddTransient<DirectusBlogPostsService>();
 
-builder.Services.AddHttpClient(nameof(DirectusBlogPostsService), c => {
+builder.Services.AddHttpClient(nameof(DirectusBlogPostsService), c =>
+{
     c.BaseAddress = new Uri("https://directus-1.redwater-cf35733f.centralus.azurecontainerapps.io");
 });
 
@@ -59,8 +60,10 @@ static string? GetContentTypeFromExtension(string slug)
 
 if (app.Environment.IsProduction())
 {
-    app.MapGet("/{**slug}", async ([FromKeyedServices("client")] DefaultFileSystem fs, CancellationToken cancellationToken, [FromRoute] string? slug = null) =>
+    app.MapGet("/{**slug}", async ([FromKeyedServices("client")] DefaultFileSystem fs, HttpContext context, CancellationToken cancellationToken, [FromRoute] string? slug = null) =>
     {
+        context.SetMaxAge1StaleInfinite();
+
         slug ??= "./index.html";
         if (await fs.FileExistsAsync(slug))
         {
