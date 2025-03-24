@@ -29,6 +29,12 @@ builder.Services.TryConfigureByConventionWithValidation<DirectusOptions>();
 
 var app = builder.Build();
 
+app.Use(async (ctx, next) =>
+{
+    ctx.SetNoCache();
+    await next(ctx);
+});
+
 // app.UseHttpsRedirection();
 
 static string? GetContentTypeFromExtension(string slug)
@@ -62,7 +68,6 @@ if (app.Environment.IsProduction())
 {
     app.MapGet("/{**slug}", async ([FromKeyedServices("client")] DefaultFileSystem fs, HttpContext context, CancellationToken cancellationToken, [FromRoute] string? slug = null) =>
     {
-
         if (slug != null && await fs.FileExistsAsync(slug))
         {
             var file = await fs.OpenReadAsync(slug, cancellationToken);
@@ -73,8 +78,11 @@ if (app.Environment.IsProduction())
             return Results.Stream(file, contentType);
         }
 
-        slug ??= "./index.html";
-        slug = (slug.EndsWith("/") ? slug.Substring(0, slug.Length - 1) : slug) + "/index.html";
+        slug = slug is null
+            ? "./index.html"
+            : (slug.EndsWith("/")
+                    ? slug.Substring(0, slug.Length - 1)
+                    : slug) + "/index.html";
 
         if (await fs.FileExistsAsync(slug))
         {
