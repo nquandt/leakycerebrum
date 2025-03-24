@@ -29,7 +29,7 @@ public class DirectusBlogPostsService
                 return Result.NotFound();
             }
 
-            return Result.Error();
+            return Result.CriticalError();
         }
 
         return Result.Success((await response.Content.ReadFromJsonAsync<DirectusData<T>>(JsonSerializerOptions.Web, cancellationToken: cancellationToken))!.Data);
@@ -50,7 +50,7 @@ public class DirectusBlogPostsService
                 return Result.NotFound();
             }
 
-            return Result.Error();
+            return Result.CriticalError();
         }
 
         return Result.Success((await response.Content.ReadFromJsonAsync<DirectusData<IEnumerable<T>>>(JsonSerializerOptions.Web, cancellationToken: cancellationToken))!.Data);
