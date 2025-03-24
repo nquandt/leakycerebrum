@@ -1,21 +1,30 @@
-using System.Text.Json;
 using Femur.FileSystem;
+using Femur;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.FileProviders;
 using Server.BlogPosts;
+using Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables("ENV_");
+
 builder.Services.AddTransient<BlogPostsEndpoint>();
 
-builder.Services.AddKeyedSingleton("server", new DefaultFileSystem("./server"));
 builder.Services.AddKeyedSingleton("client", new DefaultFileSystem("./_ClientApp/build/client"));
+
+builder.Services.AddTransient<DirectusBlogPostsService>();
+
+builder.Services.AddHttpClient(nameof(DirectusBlogPostsService), c => {
+    c.BaseAddress = new Uri("https://directus-1.redwater-cf35733f.centralus.azurecontainerapps.io");
+});
 
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddReverseProxy()
         .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 }
+
+builder.Services.TryConfigureByConventionWithValidation<DirectusOptions>();
 
 var app = builder.Build();
 
@@ -50,17 +59,6 @@ static string? GetContentTypeFromExtension(string slug)
 
 if (app.Environment.IsProduction())
 {
-    // var directory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)!;
-    // var finalPath = Path.Combine(directory!, "_ClientApp/build/client");
-
-    // app.UseFileServer(new FileServerOptions
-    // {
-    //     FileProvider = new PhysicalFileProvider(finalPath),
-    //     RequestPath = "",
-    //     RedirectToAppendTrailingSlash = false,
-    //     EnableDirectoryBrowsing = false
-    // });
-
     app.MapGet("/{**slug}", async ([FromKeyedServices("client")] DefaultFileSystem fs, CancellationToken cancellationToken, [FromRoute] string? slug = null) =>
     {
         slug ??= "./index.html";

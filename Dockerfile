@@ -3,7 +3,7 @@ ARG NODE_VERSION=20.18
 
 FROM node:${NODE_VERSION}-alpine AS node
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 ARG FEED_ACCESSTOKEN
 WORKDIR /source
 
@@ -44,7 +44,7 @@ RUN yarn --cwd ./src/Server/_ClientApp/ build
 RUN dotnet publish ./src/Server/Server.csproj --no-restore -o /app
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine
 
 
 ## if you want to add git commit

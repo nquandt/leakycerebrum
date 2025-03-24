@@ -1,11 +1,7 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Femur;
-using Femur.FileSystem;
-using Markdig;
-using Markdig.Extensions.Yaml;
-using Markdig.Syntax;
 using Microsoft.AspNetCore.Mvc;
-using YamlDotNet.Serialization;
 
 namespace Server.BlogPosts;
 
@@ -18,30 +14,32 @@ public class BlogPostsEndpoint
         endpointRouteBuilder.MapEndpoint<BlogPostsEndpoint>("/api/posts/{slug}", [HttpMethod.Get], i => i.GetPostAsync);
     }
 
-    private readonly DefaultFileSystem _defaultFileSystem;
     private readonly JsonSerializerOptions _jsonSerializerOptions;
-    public BlogPostsEndpoint([FromKeyedServices("server")]DefaultFileSystem defaultFileSystem)
+    private readonly DirectusBlogPostsService _directusBlogPostsService;
+    public BlogPostsEndpoint(DirectusBlogPostsService directusBlogPostsService)
     {
-        _defaultFileSystem = defaultFileSystem;
-        _jsonSerializerOptions = new JsonSerializerOptions() {
+        _jsonSerializerOptions = new JsonSerializerOptions()
+        {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         };
+        _directusBlogPostsService = directusBlogPostsService;
     }
 
     public async Task<IResult> GetAllPostsAsync(HttpContext context, CancellationToken cancellationToken)
     {
-        var files = await _defaultFileSystem.GetFilesAsync("./posts", cancellationToken: cancellationToken);
+        // var files = await _defaultFileSystem.GetFilesAsync("./posts", cancellationToken: cancellationToken);
+
+        var files = await _directusBlogPostsService.GetAllItemsAsync<LeakyBlogPost>(cancellationToken);
 
         var posts = new List<BlogFrontMatterDto>();
 
         foreach (var file in files)
         {
-            if (await Get(file, false, cancellationToken) is {} dto)
-            {
-                posts.Add(dto);
-            }
+            var dto = file.ToDto(false);
+
+            posts.Add(dto);
         }
 
         return Results.Json(posts, _jsonSerializerOptions);
@@ -49,21 +47,35 @@ public class BlogPostsEndpoint
 
     public async Task<IResult> GetPostAsync([FromRoute] string slug, HttpContext context, CancellationToken cancellationToken)
     {
-        var file = await Get($"./posts/{slug}.md", true, cancellationToken);        
+        // var file = await Get($"./posts/{slug}.md", true, cancellationToken);
 
-        return Results.Json(file, _jsonSerializerOptions);
+        var file = await _directusBlogPostsService.GetItemAsync<LeakyBlogPost>(slug, cancellationToken);
+
+        if (file == null)
+        {
+            return Results.NotFound();
+        }
+
+        var dto = file.ToDto(true);
+
+        return Results.Json(dto, _jsonSerializerOptions);
     }
+}
 
-    private async Task<BlogFrontMatterDto?> Get(string file, bool withContent = false, CancellationToken cancellationToken = default)
-    {
-        var content = await _defaultFileSystem.OpenReadAsync(file, cancellationToken);
-        // convert stream to string
-        using StreamReader reader = new StreamReader(content);
-        string md = await reader.ReadToEndAsync();
+public class LeakyBlogPost
+{
+    public int Id { get; set; }
+    public required string Status { get; set; }
 
-        var ft = md.GetFrontMatter<BlogFrontMatter>();
-        return ft?.ToDto(file.Split('.')[0], withContent ? md : null);
-    }
+    [JsonPropertyName("date_created")]
+    public DateTimeOffset DateCreated { get; set; }
+
+    [JsonPropertyName("date_updated")]
+    public DateTimeOffset DateUpdated { get; set; }
+    public required string Title { get; set; }
+    public required string Content { get; set; }
+    public string? Snippet { get; set; }
+    public string[] Tags { get; set; } = Array.Empty<string>();
 }
 
 public class BlogFrontMatterDto
@@ -76,79 +88,18 @@ public class BlogFrontMatterDto
     public required string[] Tags { get; set; }
 }
 
-public class BlogFrontMatter
-{
-    [YamlMember(Alias = "title")]
-    public required string Title { get; set; }
-
-    [YamlMember(Alias = "published_at")]
-    public required DateTimeOffset PublishedAt { get; set; }
-
-    [YamlMember(Alias = "snippet")]
-    public string? Snippet { get; set; }
-
-    [YamlMember(Alias = "tags")]
-    public string? Tags { get; set; }
-
-    [YamlIgnore]
-    public string[] GetTags => Tags?
-        .Split(",", StringSplitOptions.RemoveEmptyEntries)
-        .Select(x => x.Trim())
-        .ToArray() ?? Array.Empty<string>();
-}
-
 public static class BlogFrontMatterExtensions
 {
-    public static BlogFrontMatterDto ToDto(this BlogFrontMatter b, string slug, string? content)
+    public static BlogFrontMatterDto ToDto(this LeakyBlogPost b, bool withContent)
     {
         return new BlogFrontMatterDto()
         {
-            Slug = slug,
+            Slug = $"posts/{b.Id}",
             Title = b.Title,
-            PublishedAt = b.PublishedAt,
+            PublishedAt = b.DateCreated,
             Snippet = b.Snippet,
-            Tags = b.GetTags,
-            Content = content
+            Tags = b.Tags,
+            Content = withContent ? b.Content : null
         };
-    }
-}
-
-
-public static class MarkdownExtensions
-{
-    private static readonly IDeserializer YamlDeserializer =
-        new DeserializerBuilder()
-        .IgnoreUnmatchedProperties()
-        .Build();
-
-    private static readonly MarkdownPipeline Pipeline
-        = new MarkdownPipelineBuilder()
-        .UseYamlFrontMatter()
-        .Build();
-
-    public static T? GetFrontMatter<T>(this string markdown)
-    {
-        var document = Markdown.Parse(markdown, Pipeline);
-        var block = document
-            .Descendants<YamlFrontMatterBlock>()
-            .FirstOrDefault();
-
-        if (block == null)
-            return default;
-
-        var yaml =
-            block
-            // this is not a mistake
-            // we have to call .Lines 2x
-            .Lines // StringLineGroup[]
-            .Lines // StringLine[]
-            .OrderByDescending(x => x.Line)
-            .Select(x => $"{x}\n")
-            .ToList()
-            .Select(x => x.Replace("---", string.Empty))
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Aggregate((s, agg) => agg + s);
-
-        return YamlDeserializer.Deserialize<T>(yaml);
     }
 }
