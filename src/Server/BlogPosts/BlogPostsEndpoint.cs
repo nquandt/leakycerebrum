@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Ardalis.Result.AspNetCore;
 using Femur;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,9 +34,14 @@ public class BlogPostsEndpoint
 
         var files = await _directusBlogPostsService.GetAllItemsAsync<LeakyBlogPost>(cancellationToken);
 
+        if (!files.IsSuccess)
+        {
+            return files.ToMinimalApiResult();
+        }
+
         var posts = new List<BlogFrontMatterDto>();
 
-        foreach (var file in files)
+        foreach (var file in files.Value)
         {
             var dto = file.ToDto(false);
 
@@ -53,12 +59,12 @@ public class BlogPostsEndpoint
 
         var file = await _directusBlogPostsService.GetItemAsync<LeakyBlogPost>(slug, cancellationToken);
 
-        if (file == null)
+        if (!file.IsSuccess)
         {
-            return Results.NotFound();
+            return file.ToMinimalApiResult();
         }
 
-        var dto = file.ToDto(true);
+        var dto = file.Value.ToDto(true);
 
         context.SetMaxAge1StaleInfinite();
 

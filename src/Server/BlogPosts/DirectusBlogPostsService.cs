@@ -1,3 +1,4 @@
+using Ardalis.Result;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 
@@ -13,7 +14,7 @@ public class DirectusBlogPostsService
         _directusOptions = directusOptions.Value;
     }
 
-    public async Task<T?> GetItemAsync<T>(string id, CancellationToken cancellationToken) where T : class
+    public async Task<Result<T>> GetItemAsync<T>(string id, CancellationToken cancellationToken) where T : class
     {
         using var client = _httpClientFactory.CreateClient(nameof(DirectusBlogPostsService));
 
@@ -23,13 +24,18 @@ public class DirectusBlogPostsService
 
         if (!response.IsSuccessStatusCode)
         {
-            return null;
+            if (response.Headers.TryGetValues("x-powered-by", out var strings) && "Directus".Equals(strings.FirstOrDefault(), StringComparison.InvariantCultureIgnoreCase))
+            {
+                return Result.NotFound();
+            }
+
+            return Result.Error();
         }
 
-        return (await response.Content.ReadFromJsonAsync<DirectusData<T>>(JsonSerializerOptions.Web, cancellationToken: cancellationToken))!.Data;
+        return Result.Success((await response.Content.ReadFromJsonAsync<DirectusData<T>>(JsonSerializerOptions.Web, cancellationToken: cancellationToken))!.Data);
     }
 
-    public async Task<IEnumerable<T>> GetAllItemsAsync<T>(CancellationToken cancellationToken) where T : class
+    public async Task<Result<IEnumerable<T>>> GetAllItemsAsync<T>(CancellationToken cancellationToken) where T : class
     {
         using var client = _httpClientFactory.CreateClient(nameof(DirectusBlogPostsService));
 
@@ -39,10 +45,15 @@ public class DirectusBlogPostsService
 
         if (!response.IsSuccessStatusCode)
         {
-            return Enumerable.Empty<T>();
+            if (response.Headers.TryGetValues("x-powered-by", out var strings) && "Directus".Equals(strings.FirstOrDefault(), StringComparison.InvariantCultureIgnoreCase))
+            {
+                return Result.NotFound();
+            }
+
+            return Result.Error();
         }
 
-        return (await response.Content.ReadFromJsonAsync<DirectusData<IEnumerable<T>>>(JsonSerializerOptions.Web, cancellationToken: cancellationToken))!.Data;
+        return Result.Success((await response.Content.ReadFromJsonAsync<DirectusData<IEnumerable<T>>>(JsonSerializerOptions.Web, cancellationToken: cancellationToken))!.Data);
     }
 }
 
