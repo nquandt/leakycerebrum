@@ -62,18 +62,18 @@ if (app.Environment.IsProduction())
 {
     app.MapGet("/{**slug}", async ([FromKeyedServices("client")] DefaultFileSystem fs, HttpContext context, CancellationToken cancellationToken, [FromRoute] string? slug = null) =>
     {
-        context.SetMaxAge1StaleInfinite();
 
-        slug ??= "./index.html";
-        if (await fs.FileExistsAsync(slug))
+        if (slug != null && await fs.FileExistsAsync(slug))
         {
             var file = await fs.OpenReadAsync(slug, cancellationToken);
 
             var contentType = GetContentTypeFromExtension(slug);
 
+            context.SetMaxAge1StaleInfinite();
             return Results.Stream(file, contentType);
         }
 
+        slug ??= "./index.html";
         slug = (slug.EndsWith("/") ? slug.Substring(0, slug.Length - 1) : slug) + "/index.html";
 
         if (await fs.FileExistsAsync(slug))
