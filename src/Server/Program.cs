@@ -1,37 +1,35 @@
-using Femur.FileSystem;
 using Femur;
+using Femur.FileSystem;
+using Femur.Serialization;
 using Microsoft.AspNetCore.Mvc;
-using Server.BlogPosts;
+using Microsoft.Extensions.Options;
 using Server;
+using Server.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables("ENV_");
 
-builder.Services.AddTransient<BlogPostsEndpoint>();
+builder.Services.AddTransient<UpdateEndpoint>();
 
-builder.Services.AddKeyedSingleton("client", new DefaultFileSystem("./_ClientApp/build/client"));
+builder.Services.AddKeyedSingleton<IFileSystem>("client", new DefaultFileSystem("./site_output"));
 
-builder.Services.AddTransient<DirectusBlogPostsService>();
+builder.Services.AddDefaultJsonSerializer(System.Text.Json.JsonSerializerOptions.Web);
 
-builder.Services.AddHttpClient(nameof(DirectusBlogPostsService), c =>
+builder.Services.TryConfigureByConventionWithValidation<ClientOptions>();
+
+builder.Services.AddHttpClient("client", (IServiceProvider sp, HttpClient client) =>
 {
-    c.BaseAddress = new Uri("https://directus-1.redwater-cf35733f.centralus.azurecontainerapps.io");
+    var options = sp.GetRequiredService<IOptions<ClientOptions>>().Value;
+
+    client.BaseAddress = new Uri(options.BaseUrl);
 });
-
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddReverseProxy()
-        .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
-}
-
-builder.Services.TryConfigureByConventionWithValidation<DirectusOptions>();
 
 var app = builder.Build();
 
 app.Use(async (ctx, next) =>
 {
-    ctx.SetNoCache();
+    // ctx.SetNoCache();
     await next(ctx);
 });
 
@@ -64,43 +62,35 @@ static string? GetContentTypeFromExtension(string slug)
     return null;
 }
 
-if (app.Environment.IsProduction())
+app.MapGet("/{**slug}", async ([FromKeyedServices("client")] IFileSystem fs, HttpContext context, CancellationToken cancellationToken, [FromRoute] string? slug = null) =>
 {
-    app.MapGet("/{**slug}", async ([FromKeyedServices("client")] DefaultFileSystem fs, HttpContext context, CancellationToken cancellationToken, [FromRoute] string? slug = null) =>
+    if (slug != null && await fs.FileExistsAsync(slug))
     {
-        if (slug != null && await fs.FileExistsAsync(slug))
-        {
-            var file = await fs.OpenReadAsync(slug, cancellationToken);
+        var file = await fs.OpenReadAsync(slug, cancellationToken);
 
-            var contentType = GetContentTypeFromExtension(slug);
+        var contentType = GetContentTypeFromExtension(slug);
 
-            context.SetMaxAge1StaleInfinite();
-            return Results.Stream(file, contentType);
-        }
+        context.SetMaxAge1StaleInfinite();
+        return Results.Stream(file, contentType);
+    }
 
-        slug = slug is null
-            ? "./index.html"
-            : (slug.EndsWith("/")
-                    ? slug.Substring(0, slug.Length - 1)
-                    : slug) + "/index.html";
+    slug = slug is null
+        ? "./index.html"
+        : (slug.EndsWith("/")
+                ? slug.Substring(0, slug.Length - 1)
+                : slug) + "/index.html";
 
-        if (await fs.FileExistsAsync(slug))
-        {
-            var file = await fs.OpenReadAsync(slug, cancellationToken);
+    if (await fs.FileExistsAsync(slug))
+    {
+        var file = await fs.OpenReadAsync(slug, cancellationToken);
 
-            return Results.Stream(file, "text/html");
-        }
+        return Results.Stream(file, "text/html");
+    }
 
-        return Results.Stream(await fs.OpenReadAsync("./__spa-fallback.html", cancellationToken), "text/html");
-    });
-}
+    context.Response.StatusCode = 404;
+    return Results.Stream(await fs.OpenReadAsync("./404.html", cancellationToken), "text/html");
+});
 
-
-BlogPostsEndpoint.MapEndpoint(app);
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapReverseProxy();
-}
+UpdateEndpoint.ConfigureEndpoint(app);
 
 app.Run();

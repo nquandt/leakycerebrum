@@ -1,0 +1,13 @@
+@base=http://localhost:7135
+
+### Update
+POST {{base}}/update
+Content-Type: application/json
+
+{
+  "routes": [
+    "/",
+    "/posts",
+    "/posts/1"
+  ]
+}
