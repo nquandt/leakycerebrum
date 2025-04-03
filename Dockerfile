@@ -1,16 +1,18 @@
 #syntax=docker/dockerfile:1.7-labs
-ARG NODE_VERSION=20.18
+ARG NODE_VERSION=23.11
 
 FROM node:${NODE_VERSION}-alpine AS node
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
-ARG FEED_ACCESSTOKEN
-WORKDIR /source
+WORKDIR /app
 
-COPY --from=node /usr/lib /usr/lib
-COPY --from=node /usr/local/lib /usr/local/lib
-COPY --from=node /usr/local/include /usr/local/include
-COPY --from=node /usr/local/bin /usr/local/bin
+# FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+# ARG FEED_ACCESSTOKEN
+# WORKDIR /source
+
+# COPY --from=node /usr/lib /usr/lib
+# COPY --from=node /usr/local/lib /usr/local/lib
+# COPY --from=node /usr/local/include /usr/local/include
+# COPY --from=node /usr/local/bin /usr/local/bin
 
 RUN node -v
 
@@ -24,27 +26,27 @@ COPY --link yarn.lock .
 # Install dependencies
 RUN yarn install --frozen-lockfile
 
-RUN dotnet tool install --tool-path /tools dotnet-gcdump
-RUN dotnet tool install --tool-path /tools dotnet-trace
-RUN dotnet tool install --tool-path /tools dotnet-dump
-RUN dotnet tool install --tool-path /tools dotnet-counters
+# RUN dotnet tool install --tool-path /tools dotnet-gcdump
+# RUN dotnet tool install --tool-path /tools dotnet-trace
+# RUN dotnet tool install --tool-path /tools dotnet-dump
+# RUN dotnet tool install --tool-path /tools dotnet-counters
 
 
 
 # Copy project file and restore as distinct layers
-COPY --link --parents ./src/**/*.csproj .
+# COPY --link --parents ./src/**/*.csproj .
 # COPY --link ./nuget.config .
 
-RUN dotnet restore ./src/Server/Server.csproj
+# RUN dotnet restore ./src/Server/Server.csproj
 
 # Copy source code and publish app
 COPY --link . .
 
-RUN yarn --cwd ./src/Server/_ClientApp/ build
-RUN dotnet publish ./src/Server/Server.csproj --no-restore -o /app
+RUN yarn --cwd ./src/App/ build
+# RUN dotnet publish ./src/Server/Server.csproj --no-restore -o /app
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine
+# FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine
 
 
 ## if you want to add git commit
@@ -58,16 +60,20 @@ RUN apk --no-cache add curl
 # # Disable the invariant mode (set in base image)
 # ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
-WORKDIR /tools
-COPY --from=build /tools .
+# WORKDIR /tools
+# COPY --from=build /tools .
 
-WORKDIR /app
-COPY --link --from=build /app .
+# WORKDIR /app
+# COPY --link --from=build /app .
 
 USER $APP_UID
 
 EXPOSE 8000
 EXPOSE 8001
 
+
+ENV HOST=0.0.0.0
+ENV PORT=8000
+
 # ENV PROJECT_NAME=$PROJECT_NAME
-ENTRYPOINT dotnet Server.dll
+CMD node ./src/App/dist/server/entry.mjs

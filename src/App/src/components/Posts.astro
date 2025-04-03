@@ -1,0 +1,16 @@
+---
+import { getPosts } from "@/services/posts";
+import PostCard from "./PostCard.astro";
+
+const posts = await getPosts();
+---
+
+{
+    posts ? (
+        <div class="flex flex-col gap-8 w-full">
+            {posts.map((post) => (
+                <PostCard post={post} />
+            ))}
+        </div>
+    ) : undefined
+}

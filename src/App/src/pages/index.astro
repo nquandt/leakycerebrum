@@ -1,0 +1,55 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Container from "@/components/Container.astro";
+import Logo from "@/components/Logo.astro";
+import HR from "@/components/HR.astro";
+
+import WhatToShareBlurb from "@/markdowns/WhatToShareBlurb.md";
+import Posts from "@/components/Posts.astro";
+import Prose from "@/components/Prose.astro";
+
+// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
+// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+---
+
+<Layout>
+    <Container>
+        <div class="w-full flex max-md:flex-col md:gap-16 items-center">
+            <a class="flex-1" href="/posts">
+                <Logo class="w-full" />
+            </a>
+            <div class="flex-1 flex flex-col justify-center gap-4">
+                <h1 class="font-italic text-6xl font-serif">leaky cerebrum</h1>
+                <div
+                    class="light:bg-zinc-300/50 dark:bg-zinc-800/50 p-4 rounded-md flex flex-col gap-4"
+                >
+                    <h2 class="font-italic text-4xl font-serif">
+                        Where ideas spill and knowledge flows.
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </Container>
+    <Container class="py-16 text-xl">
+        <div class="flex flex-col justify-center gap-16">
+            <HR />
+            <Prose>
+                <WhatToShareBlurb />
+            </Prose>
+            <HR />
+            <h1
+                class="text-4xl underline font-italic dark:text-white light:text-black"
+            >
+                Some Leaks
+            </h1>
+            <Posts />
+            <a
+                class="p-4 px-8 rounded-md border-[1px] border-solid border-zinc-800 hover:bg-zinc-600 mx-auto"
+                href="/posts">Find more</a
+            >
+        </div>
+    </Container>
+    <Container>
+        <div class="flex flex-col gap-8 w-full"></div>
+    </Container>
+</Layout>

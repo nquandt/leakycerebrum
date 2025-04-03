@@ -1,0 +1,30 @@
+---
+import Container from "@/components/Container.astro";
+import HR from "@/components/HR.astro";
+import Markdown from "@/components/Markdown.astro";
+import Layout from "@/layouts/Layout.astro";
+import { getPost } from "@/services/posts";
+
+const { slug } = Astro.params;
+
+const post = await getPost(slug!);
+---
+
+<Layout>
+    <Container>
+        <article class="mx-auto">
+            <h1 class="text-5xl font-bold">{post.title}</h1>
+            <time class="text-gray-500">
+                {
+                    new Date(post.date_created).toLocaleDateString("en-us", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                    })
+                }
+            </time>
+            <HR />
+            <Markdown content={post.content} />
+        </article>
+    </Container>
+</Layout>
