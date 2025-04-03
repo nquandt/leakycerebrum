@@ -2,8 +2,10 @@
 ></button>
 
 <script>
-    const buttons = document.querySelectorAll("[data-theme-button]");
-    buttons.forEach((b) => {
-        b.addEventListener("click", () => (window as any).toggleTheme());
+    document.addEventListener("astro:page-load", () => {
+        const buttons = document.querySelectorAll("[data-theme-button]");
+        buttons.forEach((b) => {
+            b.addEventListener("click", () => (window as any).toggleTheme());
+        });
     });
 </script>
