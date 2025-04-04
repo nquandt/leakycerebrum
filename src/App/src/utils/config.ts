@@ -1,4 +1,4 @@
-const envVariables = import.meta.env.SSR ? process.env : import.meta.env;
+const envVariables = process.env;
 
 const prefix = "APP_";
 

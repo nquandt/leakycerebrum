@@ -1,3 +1,5 @@
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using Femur;
 using Femur.FileSystem;
 using Femur.Serialization;
@@ -12,7 +14,12 @@ builder.Configuration.AddEnvironmentVariables("ENV_");
 
 builder.Services.AddTransient<UpdateEndpoint>();
 
-builder.Services.AddKeyedSingleton<IFileSystem>("client", new DefaultFileSystem("./site_output"));
+builder.Services.AddSingleton<IFileSystem>((IServiceProvider sp) =>
+{
+    var storageOptions = sp.GetRequiredService<IOptions<Server.StorageOptions>>().Value;
+
+    return new AzureBlobStorageFileSystem(new BlobContainerClient(new Uri(new Uri(storageOptions.BaseUrl), "/siteoutput"), new DefaultAzureCredential()));
+});
 
 builder.Services.AddDefaultJsonSerializer(System.Text.Json.JsonSerializerOptions.Web);
 
@@ -62,7 +69,7 @@ static string? GetContentTypeFromExtension(string slug)
     return null;
 }
 
-app.MapGet("/{**slug}", async ([FromKeyedServices("client")] IFileSystem fs, HttpContext context, CancellationToken cancellationToken, [FromRoute] string? slug = null) =>
+app.MapGet("/{**slug}", async (IFileSystem fs, HttpContext context, CancellationToken cancellationToken, [FromRoute] string? slug = null) =>
 {
     if (slug != null && await fs.FileExistsAsync(slug))
     {

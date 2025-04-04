@@ -15,7 +15,7 @@ public class UpdateEndpoint
     private readonly IAsyncSerializerFactory _serializer;
     private readonly IHttpClientFactory _factory;
 
-    public UpdateEndpoint([FromKeyedServices("client")] IFileSystem fs, IAsyncSerializerFactory serializerFactory, IHttpClientFactory factory)
+    public UpdateEndpoint(IFileSystem fs, IAsyncSerializerFactory serializerFactory, IHttpClientFactory factory)
     {
         _fs = fs;
         _serializer = serializerFactory;
@@ -37,7 +37,7 @@ public class UpdateEndpoint
         var assetDownloader = new AssetDownloader(client, _fs);
 
         // start app in proc...
-        using var app = await WebAppProcess.Start(_factory, "yarn", ["--cwd", "../App", "preview"], 4321);
+        using var app = await WebAppProcess.Start(_factory, "node", ["./dist/server/entry.mjs"], 4321);
 
         foreach (var route in request.Routes)
         {
