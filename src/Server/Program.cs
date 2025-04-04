@@ -14,6 +14,8 @@ builder.Configuration.AddEnvironmentVariables("ENV_");
 
 builder.Services.AddTransient<UpdateEndpoint>();
 
+builder.Services.TryConfigureByConventionWithValidation<StorageOptions>();
+
 builder.Services.AddSingleton<IFileSystem>((IServiceProvider sp) =>
 {
     var storageOptions = sp.GetRequiredService<IOptions<Server.StorageOptions>>().Value;
